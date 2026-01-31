@@ -8,6 +8,7 @@ import { CONFIG } from "../config.js";
 interface LsOptions {
   category?: string;
   full?: boolean;
+  tag?: string[];
 }
 
 interface NoteInfo {
@@ -32,7 +33,23 @@ export function listNotes(options: LsOptions) {
       return;
     }
 
-    const notes = notePaths.map(parseNote);
+    let notes = notePaths.map(parseNote);
+
+    // Filter by tags if specified
+    if (options.tag && options.tag.length > 0) {
+      const filterTags = options.tag.map((t) => t.toLowerCase());
+      notes = notes.filter((note) =>
+        filterTags.some((t) => note.tags.map((nt) => nt.toLowerCase()).includes(t))
+      );
+
+      if (notes.length === 0) {
+        console.log(
+          `\n${chalk.yellow(figures.warning)} No notes with tags: ${chalk.yellow(options.tag.join(", "))}\n`
+        );
+        return;
+      }
+    }
+
     const byCategory = groupBy(notes, (n) => n.category);
 
     // Header
