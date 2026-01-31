@@ -1,14 +1,17 @@
 import { readdirSync, statSync, readFileSync } from "fs";
 import { join, relative, basename, dirname } from "path";
+import { spawn } from "child_process";
 import chalk from "chalk";
 import figures from "figures";
 import Table from "cli-table3";
+import { select } from "@inquirer/prompts";
 import { CONFIG } from "../config.js";
 
 interface LsOptions {
   category?: string;
   full?: boolean;
   tag?: string[];
+  interactive?: boolean;
 }
 
 interface NoteInfo {
@@ -19,7 +22,7 @@ interface NoteInfo {
   tags: string[];
 }
 
-export function listNotes(options: LsOptions) {
+export async function listNotes(options: LsOptions) {
   const root = options.category ? join(CONFIG.home, options.category) : CONFIG.home;
 
   try {
@@ -48,6 +51,23 @@ export function listNotes(options: LsOptions) {
         );
         return;
       }
+    }
+
+    // Interactive mode
+    if (options.interactive) {
+      const choices = notes.map((note) => ({
+        name: `${note.title} ${chalk.dim(`[${note.category}]`)} ${note.tags.length ? chalk.yellow(note.tags.map((t) => `#${t}`).join(" ")) : ""}`,
+        value: note.path,
+      }));
+
+      const selected = await select({
+        message: chalk.hex("#7C3AED")("Select a note to open"),
+        choices,
+        loop: true,
+      });
+
+      openInEditor(selected);
+      return;
     }
 
     const byCategory = groupBy(notes, (n) => n.category);
@@ -110,6 +130,14 @@ export function listNotes(options: LsOptions) {
         chalk.cyan("notera new <category> <title>\n")
     );
   }
+}
+
+function openInEditor(filepath: string) {
+  const [cmd, ...args] = CONFIG.editor.split(" ");
+  spawn(cmd, [...args, filepath], {
+    stdio: "inherit",
+    shell: true,
+  });
 }
 
 function findNotes(dir: string): string[] {
