@@ -2,7 +2,11 @@ import { readdirSync, statSync, readFileSync } from "fs";
 import { join, basename, dirname, relative } from "path";
 import chalk from "chalk";
 import figures from "figures";
+import { Marked } from "marked";
+import { markedTerminal } from "marked-terminal";
 import { CONFIG } from "../config.js";
+
+const marked = new Marked(markedTerminal());
 
 interface NoteInfo {
   path: string;
@@ -46,7 +50,7 @@ export function catNote(query: string, options: { raw?: boolean }) {
     return;
   }
 
-  // Pretty print
+  // Pretty print with rendered markdown
   const bodyMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
   const body = bodyMatch ? bodyMatch[1].trim() : content;
 
@@ -54,7 +58,7 @@ export function catNote(query: string, options: { raw?: boolean }) {
     `\n${chalk.hex("#7C3AED")(figures.star)} ${chalk.bold(note.title)} ${chalk.dim(`[${note.category}]`)}\n`
   );
   console.log(chalk.dim("─".repeat(50)));
-  console.log(body);
+  console.log(marked.parse(body));
   console.log(chalk.dim("─".repeat(50)) + "\n");
 }
 
