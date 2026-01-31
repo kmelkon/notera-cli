@@ -24,6 +24,7 @@ program
   .description("List all notes")
   .option("-c, --category <category>", "Filter by category")
   .option("-t, --tag <tag...>", "Filter by tag(s)")
+  .option("-i, --interactive", "Interactive selection mode")
   .option("-f, --full", "Show full paths")
   .action(listNotes);
 
