@@ -1,0 +1,25 @@
+{
+  "name": "notera-cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "notera": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --outdir dist --target node",
+    "compile": "bun build src/cli.ts --compile --outfile notera"
+  },
+  "dependencies": {
+    "chalk": "^5.4.0",
+    "commander": "^12.1.0",
+    "figures": "^6.1.0",
+    "ora": "^8.1.0",
+    "boxen": "^8.0.0",
+    "cli-table3": "^0.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
