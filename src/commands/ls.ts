@@ -7,7 +7,7 @@ import { CONFIG } from "../config.js";
 
 interface LsOptions {
   category?: string;
-  full?: boolean;
+  paths?: boolean;
   tag?: string[];
 }
 
@@ -48,6 +48,14 @@ export function listNotes(options: LsOptions) {
         );
         return;
       }
+    }
+
+    // Paths-only output for piping
+    if (options.paths) {
+      for (const note of notes) {
+        console.log(note.path);
+      }
+      return;
     }
 
     const byCategory = groupBy(notes, (n) => n.category);

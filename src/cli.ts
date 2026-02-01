@@ -7,6 +7,8 @@ import { searchNotes } from "./commands/search.js";
 import { rmNote } from "./commands/rm.js";
 import { mvNote } from "./commands/mv.js";
 import { catNote } from "./commands/cat.js";
+import { showConfig } from "./commands/config.js";
+import { generateCompletion } from "./commands/completion.js";
 
 program
   .name("notera")
@@ -24,7 +26,7 @@ program
   .description("List all notes")
   .option("-c, --category <category>", "Filter by category")
   .option("-t, --tag <tag...>", "Filter by tag(s)")
-  .option("-f, --full", "Show full paths")
+  .option("-p, --paths", "Output paths only (for piping)")
   .action(listNotes);
 
 program
@@ -54,5 +56,15 @@ program
   .command("mv <query> <category>")
   .description("Move note to different category")
   .action(mvNote);
+
+program
+  .command("config")
+  .description("Show current configuration")
+  .action(showConfig);
+
+program
+  .command("completion [shell]")
+  .description("Generate shell completion (bash, zsh, fish)")
+  .action(generateCompletion);
 
 program.parse();
