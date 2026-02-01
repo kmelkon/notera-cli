@@ -6,6 +6,7 @@ import boxen from "boxen";
 import figures from "figures";
 import ora from "ora";
 import { CONFIG } from "../config.js";
+import { findTemplate, mergeFrontmatter } from "../templates.js";
 
 interface NewOptions {
   tags?: string;
@@ -32,24 +33,46 @@ export async function newNote(category: string, title: string, options: NewOptio
   mkdirSync(categoryDir, { recursive: true });
 
   const now = new Date().toISOString();
-  const tags = options.tags ? options.tags.split(",").map((t) => t.trim()) : [];
+  const cliTags = options.tags ? options.tags.split(",").map((t) => t.trim()) : [];
 
-  const frontmatter = `---
-title: ${title}
-created: ${now}
-tags: [${tags.join(", ")}]
+  // Find matching template
+  const template = findTemplate(category, CONFIG.templates);
+
+  // Build frontmatter with template
+  const baseFrontmatter: Record<string, unknown> = {
+    title,
+    created: now,
+    tags: cliTags,
+  };
+
+  const mergedFrontmatter = mergeFrontmatter(baseFrontmatter, template?.frontmatter);
+
+  // Format frontmatter as YAML
+  const frontmatterLines = Object.entries(mergedFrontmatter).map(([key, value]) => {
+    if (Array.isArray(value)) {
+      return `${key}: [${value.join(", ")}]`;
+    }
+    if (typeof value === "string" && value.includes(":")) {
+      return `${key}: "${value}"`;
+    }
+    return `${key}: ${value}`;
+  });
+
+  const content = `---
+${frontmatterLines.join("\n")}
 ---
 
-`;
+${template?.content ?? ""}`;
 
-  writeFileSync(filepath, frontmatter);
+  writeFileSync(filepath, content);
   spinner.succeed(chalk.green("Note created"));
 
+  const displayTags = mergedFrontmatter.tags as string[];
   console.log(
     boxen(
       `${chalk.bold.hex("#7C3AED")(title)}\n\n` +
         `${chalk.dim(figures.pointerSmall)} Category: ${chalk.cyan(category)}\n` +
-        `${chalk.dim(figures.pointerSmall)} Tags: ${tags.length ? chalk.yellow(tags.join(", ")) : chalk.dim("none")}\n` +
+        `${chalk.dim(figures.pointerSmall)} Tags: ${displayTags.length ? chalk.yellow(displayTags.join(", ")) : chalk.dim("none")}\n` +
         `${chalk.dim(figures.pointerSmall)} Path: ${chalk.dim(filepath)}`,
       {
         padding: 1,
