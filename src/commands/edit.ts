@@ -3,6 +3,7 @@ import { join, basename, dirname, relative } from "path";
 import { spawn } from "child_process";
 import chalk from "chalk";
 import figures from "figures";
+import { select } from "@inquirer/prompts";
 import { CONFIG } from "../config.js";
 
 interface NoteInfo {
@@ -11,7 +12,7 @@ interface NoteInfo {
   category: string;
 }
 
-export function editNote(query?: string) {
+export async function editNote(query?: string) {
   const notes = findNotes(CONFIG.home).map(parseNote);
 
   if (notes.length === 0) {
@@ -46,19 +47,16 @@ export function editNote(query?: string) {
     return;
   }
 
-  // Multiple matches
-  console.log(
-    `\n${chalk.yellow(figures.warning)} Multiple matches for ${chalk.yellow(query || "all")}:\n`
-  );
-
-  matches.forEach((note, i) => {
-    const num = chalk.dim(`${i + 1}.`);
-    const title = chalk.white(note.title);
-    const cat = chalk.cyan(`[${note.category}]`);
-    console.log(`  ${num} ${title} ${cat}`);
+  // Multiple matches - interactive selection
+  const selected = await select({
+    message: "Select note to edit:",
+    choices: matches.map((note) => ({
+      name: `${note.title} ${chalk.dim(`[${note.category}]`)}`,
+      value: note.path,
+    })),
   });
 
-  console.log(chalk.dim(`\n  Be more specific to open directly.\n`));
+  openInEditor(selected);
 }
 
 function findNotes(dir: string): string[] {
